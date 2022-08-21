@@ -20,6 +20,10 @@ from sys import stdout
 from sys import stderr
 from os import fdopen
 import sys, os, json, traceback, warnings
+from time import time_ns
+from ctypes import *
+so_file = "/bin/build/groundhog-tracee-lib.so"
+groundhog_functions = CDLL(so_file)
 
 try:
   # if the directory 'virtualenv' is extracted out of a zip file
@@ -48,7 +52,14 @@ if os.getenv("__OW_WAIT_FOR_ACK", "") != "":
     out.flush()
 
 env = os.environ
+i = 0
 while True:
+  if i == 1:
+    groundhog_functions.checkpoint_me()
+  if i > 1:
+    groundhog_functions.restore_me()
+
+  i +=1
   line = stdin.readline()
   if not line: break
   args = json.loads(line)
@@ -60,7 +71,12 @@ while True:
       env["__OW_%s" % key.upper()]= args[key]
   res = {}
   try:
+    if "groundhog-dump-stats" in payload:
+        groundhog_functions.dump_stats_me()
+    start = time_ns()
     res = main(payload)
+    TrueTime = time_ns() - start
+    res["TrueTime"] = TrueTime
   except Exception as ex:
     print(traceback.format_exc(), file=stderr)
     res = {"error": str(ex)}
