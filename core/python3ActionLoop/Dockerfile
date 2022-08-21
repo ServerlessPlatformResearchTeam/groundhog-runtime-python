@@ -14,6 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+FROM ubuntu:20.04 as groundhog
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -y
+RUN apt-get install -y build-essential linux-headers-generic libglib2.0-dev
+COPY groundhog /groundhog
+WORKDIR /groundhog
+RUN make
+
 # build go proxy from source
 FROM golang:1.15 AS builder_source
 ARG GO_PROXY_GITHUB_USER=apache
@@ -32,7 +40,7 @@ RUN curl -sL \
   && cd openwhisk-runtime-go-*/main\
   && GO111MODULE=on go build -o /bin/proxy
 
-FROM python:3.7-buster
+FROM python:3.8.2-buster
 ARG GO_PROXY_BUILD_FROM=release
 
 # Install common modules for python
@@ -46,7 +54,11 @@ RUN pip install \
     scrapy==1.5.1 \
     simplejson==3.16.0 \
     virtualenv==16.0.0 \
-    twisted==18.7.0
+    twisted==18.7.0 \
+    pyperformance \
+    genshi \
+    pyaes \
+    dulwich
 
 RUN mkdir -p /action
 WORKDIR /
@@ -64,6 +76,6 @@ ENV OW_WAIT_FOR_ACK=1
 ENV OW_EXECUTION_ENV=openwhisk/action-python-v3.7
 # compiler script
 ENV OW_COMPILER=/bin/compile
-
+COPY --from=groundhog /groundhog/build /bin/build
 ENTRYPOINT ["/bin/proxy"]
 
