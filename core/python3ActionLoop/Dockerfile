@@ -55,10 +55,10 @@ RUN pip install \
     simplejson==3.16.0 \
     virtualenv==16.0.0 \
     twisted==18.7.0 \
-    pyperformance \
-    genshi \
-    pyaes \
-    dulwich
+    pyperformance==1.0.2 \
+    genshi==0.7.5 \
+    pyaes==1.6.1 \
+    dulwich==0.20.26
 
 RUN mkdir -p /action
 WORKDIR /
