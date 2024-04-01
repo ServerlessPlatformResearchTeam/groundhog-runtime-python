@@ -36,4 +36,4 @@ jobs:
       - name: Build Runtime
         working-directory: runtime
         run: |
-          ./gradlew distDocker -PdockerImagePrefix=developerryou -PdockerRegistry=docker.io
+          ./gradlew :core:python3ActionLoop:distDocker -PdockerImagePrefix=developerryou -PdockerRegistry=docker.io
