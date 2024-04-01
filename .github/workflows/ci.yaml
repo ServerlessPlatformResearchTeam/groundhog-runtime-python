@@ -18,9 +18,6 @@ jobs:
           path: runtime
           submodules: "recursive"
 
-      - name: Scan Code
-        uses: apache/openwhisk-utilities/scancode@master
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
