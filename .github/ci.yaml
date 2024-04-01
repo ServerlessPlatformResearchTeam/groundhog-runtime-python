@@ -1,0 +1,42 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [master]
+    tags: ["*"]
+
+permissions: read-all
+
+jobs:
+  ci:
+    runs-on: ubuntu-22.04
+    steps:
+      # Checkout just this repo and run scanCode before we do anything else
+      - name: Checkout runtime repo
+        uses: actions/checkout@v4
+        with:
+          path: runtime
+          submodules: "recursive"
+
+      - name: Scan Code
+        uses: apache/openwhisk-utilities/scancode@master
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "11"
+
+      # Conditionally publish runtime images to DockerHub
+      # Important: naming convention for release tags is runtime@version
+      - name: Docker Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER_OPENWHISK }}
+          password: ${{ secrets.DOCKERHUB_TOKEN_OPENWHISK }}
+
+      # Build this repository
+      - name: Build Runtime
+        working-directory: runtime
+        run: |
+          ./gradlew distDocker -PdockerImagePrefix=developerryou -PdockerRegistry=docker.io
